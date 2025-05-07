@@ -1,18 +1,16 @@
 {
-  "name": "server",
+  "name": "task-manager-app",
   "version": "1.0.0",
-  "description": "backend for task management application",
+  "description": "Full-stack Task Management App",
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "setup-project": "npm i && cd client && npm i",
-    "setup-production-app": "npm i && cd client && npm i && npm run build",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon server.js",
     "client": "cd client && npm run dev",
-    "dev": "concurrently --kill-others-on-fail \" npm run server\" \" npm run client\""
+    "build": "cd client && npm install && npm run build",
+    "start": "node server.js"
   },
-  "author": "James",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
@@ -21,7 +19,10 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.3",
-    "nodemon": "^3.1.10",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.10"
   }
 }
