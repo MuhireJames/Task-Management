@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 
 const usersSchema = new mongoose.Schema(
   {
@@ -7,13 +6,13 @@ const usersSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      trim: true, // Removes extra spaces
+      trim: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
-      match: [/.+@.+\..+/, "Please enter a valid email address"], // Email validation
+      match: [/.+@.+\..+/, "Please enter a valid email address"],
     },
     password: {
       type: String,
@@ -25,7 +24,7 @@ const usersSchema = new mongoose.Schema(
       default: "user",
     },
   },
-  { timestamps: true } 
+  { timestamps: true }
 );
 usersSchema.virtual("isAdmin").get(function () {
   return this.role === "admin";
@@ -33,6 +32,5 @@ usersSchema.virtual("isAdmin").get(function () {
 
 usersSchema.set("toJSON", { virtuals: true });
 usersSchema.set("toObject", { virtuals: true });
-
 
 export default mongoose.model("Users", usersSchema);

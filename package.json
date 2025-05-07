@@ -1,5 +1,5 @@
 {
-  "name": "task-manager-app",
+  "name": "Task Manager",
   "version": "1.0.0",
   "description": "Full-stack Task Management App",
   "main": "server.js",
@@ -11,6 +11,9 @@
     "start": "node server.js",
     "build": "cd client && npm install && npm run build"
   },
+  "keywords": [],
+  "author": "James",
+  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",

@@ -3,13 +3,14 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import path from "path";
-import { fileURLToPath } from "url";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { dirname } from "path";
+import { fileURLToPath } from "node:url";
+import path from "path";
 
-import authRoutes from "./routes/authRouter.js";
-import taskRoutes from "./routes/taskRouter.js";
+import authRouter from "./routes/authRouter.js";
+import taskRouter from "./routes/taskRouter.js";
 
 dotenv.config();
 
@@ -22,6 +23,8 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
   },
 });
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const clientBuildPath = path.join(__dirname, "./client/dist");
 
 // Middleware
 app.use(cors({ origin: true, credentials: true }));
@@ -30,22 +33,22 @@ app.use(express.json());
 app.set("io", io);
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/tasks", taskRoutes);
+app.use("/api/auth", authRouter);
+app.use("/api/tasks", taskRouter);
 
-// Serve client in production
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const clientBuildPath = path.join(__dirname, "client/dist");
+app.use(express.static(path.resolve(__dirname, "./client/dist")));
 
-app.use(express.static(clientBuildPath));
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "./client/dist", "index.html"));
+});
+app.use("*", (res, req) => {
+  res.status(404).json({ msg: "Not found" });
+});
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(clientBuildPath, "index.html"));
 });
 
-// Connect to MongoDB and start server
-//  Socket.io connection handling
 io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
 
@@ -54,7 +57,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// MongoDB connection and server start
 const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
 

@@ -1,15 +1,7 @@
-import express from "express";
 import Users from "../models/users.js";
 import Tasks from "../models/tasks.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
 
-const router = express.Router();
-
-// Apply the middleware to all routes in this router
-router.use(authenticateToken);
-
-// Create new task
-router.post("/", async (req, res) => {
+export const createTask = async (req, res) => {
   try {
     const { assigned_to, ...taskData } = req.body;
 
@@ -28,15 +20,13 @@ router.post("/", async (req, res) => {
         });
       }
     }
-
     res.status(201).json({ task });
   } catch (err) {
     console.error("Error creating task:", err);
     res.status(500).json({ error: err.message });
   }
-});
-
-router.get("/", async (req, res) => {
+};
+export const getAllTasks = async (req, res) => {
   try {
     const username = req.user.username;
     const { priority, status, due_date } = req.query;
@@ -57,9 +47,8 @@ router.get("/", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-router.get("/:id", async (req, res) => {
+};
+export const getTaskById = async (req, res) => {
   try {
     const task = await Tasks.findById(req.params.id);
 
@@ -69,9 +58,8 @@ router.get("/:id", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-router.patch("/:id", async (req, res) => {
+};
+export const updateTask = async (req, res) => {
   try {
     const updatedTask = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -86,46 +74,21 @@ router.patch("/:id", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-router.delete("/:id", authenticateToken, async (req, res) => {
-  if (!req.user.role.isAdmin) {
-    return res.status(403).json({ error: "Only admins can delete tasks." });
-  }
-
+};
+export const deleteTask = async (req, res) => {
   try {
     const removedTask = await Tasks.findByIdAndDelete(req.params.id);
     if (!removedTask) return res.status(404).json({ msg: "Task not found" });
+
+    const io = req.app.get("io");
+    io.emit("taskDeleted", removedTask);
 
     res.status(200).json({ msg: "Task deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-router.post("/assign_task", async (req, res) => {
-  const userId = req.user.id;
-  const taskId = req.task.id;
-
-  const task = await Tasks.findById(taskId);
-  if (!task) return res.status(404).json({ msg: "Tasks not found" });
-
-  const user = await Users.findById(userId);
-  if (!user) return res.status(404).json({ msg: "User not found" });
-
-  task.assigned_to = userId;
-  await task.save();
-
-  // Emit task assignment event
-  const io = req.app.get("io");
-  io.to(userId).emit("taskAssigned", {
-    message: `You have been assigned a new task: ${task.title}`,
-  });
-
-  res.status(200).json({ msg: "Tasks assigned and user notified", task });
-});
-
-router.get("/tasks", authenticateToken, async (req, res) => {
+};
+export const getTaskByFilter = async (req, res) => {
   const { priority, status, due_date } = req.query;
   const filters = {};
 
@@ -139,6 +102,4 @@ router.get("/tasks", authenticateToken, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-export default router;
+};

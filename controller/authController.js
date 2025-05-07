@@ -1,13 +1,8 @@
-import express from "express";
 import Users from "../models/users.js";
 import { comparePassword, hashPassword } from "../utils/passwordUtils.js";
 import { createJWT } from "../utils/tokenUtils.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
 
-const router = express.Router();
-
-// Register user
-router.post("/register", async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { email, password, username } = req.body;
     const isFirstAccount = (await Users.countDocuments()) === 0;
@@ -29,10 +24,8 @@ router.post("/register", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-// Login user
-router.post("/login", async (req, res) => {
+};
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -58,19 +51,16 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-});
-
-// Logout user
-router.post("/logout", (req, res) => {
+};
+export const logout = (req, res) => {
   res.cookie("token", "logout", {
     httpOnly: true,
     expires: new Date(Date.now()),
   });
-  res.status(200).json({ msg: "User logged out!" });
-});
+  res.status(200).json({ msg: "user logged out!" });
+};
 
-// Verify user authentication
-router.get("/verify", authenticateToken, async (req, res) => {
+export const verify = async (req, res) => {
   try {
     const user = await Users.findById(req.user.userId);
     if (!user) {
@@ -81,20 +71,16 @@ router.get("/verify", authenticateToken, async (req, res) => {
     console.error("Error verifying user:", err);
     res.status(500).json({ message: "Internal server error" });
   }
-});
-
-// Get all users
-router.get("/users", authenticateToken, async (req, res) => {
+};
+export const getAllUsers = async (req, res) => {
   try {
     const users = await Users.find({}, "username email role");
     res.status(200).json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-// Get current user
-router.get("/current-user", authenticateToken, async (req, res) => {
+};
+export const getCurrentUser = async (req, res) => {
   try {
     const user = await Users.findById(req.user.userId, "username email role");
     if (!user) {
@@ -105,6 +91,4 @@ router.get("/current-user", authenticateToken, async (req, res) => {
     console.error("Error fetching current user:", err);
     res.status(500).json({ message: "Internal server error" });
   }
-});
-
-export default router;
+};
