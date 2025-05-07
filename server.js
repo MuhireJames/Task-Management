@@ -8,8 +8,8 @@ import { fileURLToPath } from "url";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-import authRoutes from "./routes/auth.js";
-import taskRoutes from "./routes/tasks.js";
+import authRoutes from "./routes/authRouter.js";
+import taskRoutes from "./routes/taskRouter.js";
 
 dotenv.config();
 
