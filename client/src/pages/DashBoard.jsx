@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
-import { api } from "../../utils/api";
+import api from "../../utils/api";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -9,9 +9,9 @@ function DashBoard() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [tasks, setTasks] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null); // State to store current user
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
-  const socket = io("http://localhost:5100"); // Replace with your backend URL
+  const socket = io("http://localhost:5100");
 
   // Fetch current user
   useEffect(() => {

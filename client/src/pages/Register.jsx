@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom"; // Import Link for navigation
-import { api } from "../../utils/api";
+import api from "../../utils/api";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -32,6 +32,7 @@ function Register() {
       }, 2000); // Optional delay for user to see the success message
     } catch (err) {
       setError(err.response?.data?.message || "Failed to register");
+      console.log(err);
     } finally {
       setIsSubmitting(false); // Re-enable the button after submission
     }

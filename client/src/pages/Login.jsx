@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom"; // Import Link for navigation
-import { api } from "../../utils/api";
+import api from "../../utils/api";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -31,6 +31,7 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to login");
+      console.log(err.message);
     } finally {
       setIsSubmitting(false); // Re-enable the button after submission
     }

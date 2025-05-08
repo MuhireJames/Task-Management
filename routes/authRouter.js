@@ -7,12 +7,11 @@ import {
   getCurrentUser,
 } from "../controller/authController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
-import express from "express";
-
-const router = express.Router();
+import { Router } from "express";
+const router = Router();
 
 router.post("/register", register);
-router.post("login", login);
+router.post("/login", login);
 router.post("/logout", logout);
 router.get("/verify", authenticateToken, verify);
 router.get("/users", authenticateToken, getAllUsers);

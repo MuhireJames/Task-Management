@@ -1,5 +1,3 @@
-import express from "express";
-
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import {
   createTask,
@@ -10,15 +8,13 @@ import {
   updateTask,
 } from "../controller/taskController.js";
 
-const router = express.Router();
+import { Router } from "express";
+const router = Router();
 
 router.use(authenticateToken);
+router.route("/").get(getAllTasks,getTaskByFilter).post(createTask);
+router.route("/:id").get(getTaskById).patch(updateTask).delete(deleteTask);
 
-router.post("/", createTask);
-router.get("/", getAllTasks);
-router.get("/:id", getTaskById);
-router.patch("/:id", updateTask);
-router.delete("/:id", deleteTask);
-router.get("/", getTaskByFilter);
+// router.get("/", getTaskByFilter);
 
 export default router;
