@@ -3,17 +3,22 @@ import { io } from "socket.io-client";
 import api from "../../utils/api";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FaCalendarAlt, FaUser, FaFlag, FaTasks } from "react-icons/fa";
 
 function DashBoard() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
+  const [filterDueDate, setFilterDueDate] = useState("");
   const [tasks, setTasks] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("darkMode") === "true";
+  });
+
   const navigate = useNavigate();
   const socket = io("http://localhost:5100");
 
-  // Fetch current user
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -26,11 +31,9 @@ function DashBoard() {
         toast.error("Failed to fetch current user.");
       }
     };
-
     fetchCurrentUser();
   }, []);
 
-  // Fetch tasks from the backend
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -44,23 +47,39 @@ function DashBoard() {
 
     fetchTasks();
 
-    // Listen for task assignment notifications
     socket.on("taskAssigned", (task) => {
       toast.info(`New task assigned: ${task.title}`);
       setTasks((prevTasks) => [...prevTasks, task]);
     });
 
-    // Cleanup socket connection
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, [socket]);
 
-  const handleSearchChange = (e) => setSearch(e.target.value);
-  const handleStatusChange = (e) => setFilterStatus(e.target.value);
-  const handlePriorityChange = (e) => setFilterPriority(e.target.value);
+  const isDueToday = (date) => {
+    const today = new Date();
+    const dueDate = new Date(date);
+    return (
+      dueDate.getDate() === today.getDate() &&
+      dueDate.getMonth() === today.getMonth() &&
+      dueDate.getFullYear() === today.getFullYear()
+    );
+  };
 
-  // Filter tasks based on search, status, and priority
+  const isDueThisWeek = (date) => {
+    const now = new Date();
+    const dueDate = new Date(date);
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    return dueDate >= startOfWeek && dueDate <= endOfWeek;
+  };
+
+  const isOverdue = (date) => {
+    const dueDate = new Date(date);
+    const now = new Date();
+    return dueDate < now && !isDueToday(date);
+  };
+
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch = task.title
       .toLowerCase()
@@ -70,7 +89,14 @@ function DashBoard() {
       ? task.priority === filterPriority
       : true;
 
-    return matchesSearch && matchesStatus && matchesPriority;
+    let matchesDueDate = true;
+    if (filterDueDate === "today") matchesDueDate = isDueToday(task.due_date);
+    else if (filterDueDate === "week")
+      matchesDueDate = isDueThisWeek(task.due_date);
+    else if (filterDueDate === "overdue")
+      matchesDueDate = isOverdue(task.due_date);
+
+    return matchesSearch && matchesStatus && matchesPriority && matchesDueDate;
   });
 
   const handleLogout = async () => {
@@ -93,11 +119,6 @@ function DashBoard() {
   };
 
   const handleDeleteTask = async (taskId) => {
-    if (!currentUser?.isAdmin) {
-      toast.warn("Only admins can delete tasks.");
-      return;
-    }
-
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this task?"
     );
@@ -113,29 +134,58 @@ function DashBoard() {
     }
   };
 
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "High":
+        return "text-danger";
+      case "Medium":
+        return "text-warning";
+      case "Low":
+        return "text-success";
+      default:
+        return "";
+    }
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      localStorage.setItem("darkMode", !prev);
+      return !prev;
+    });
+  };
+
   return (
-    <div>
-      {/* NavBar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+    <div
+      className={
+        darkMode
+          ? "bg-dark text-light min-vh-100"
+          : "bg-light text-dark min-vh-100"
+      }
+    >
+      {/* Navbar */}
+      <nav
+        className={`navbar navbar-expand-lg ${
+          darkMode ? "navbar-dark bg-dark" : "navbar-light bg-light"
+        }`}
+      >
         <div className="container-fluid">
-          <Link className="navbar-brand" href="/dashboard">
+          <Link className="navbar-brand" to="/dashboard">
             Task Manager
           </Link>
-          <form className="d-flex">
+          <div className="d-flex flex-wrap flex-grow-1 align-items-center justify-content-end gap-2">
             <input
-              className="form-control me-2"
+              className="form-control"
+              style={{ maxWidth: "180px" }}
               type="search"
               placeholder="Search tasks"
-              aria-label="Search"
               value={search}
-              onChange={handleSearchChange}
+              onChange={(e) => setSearch(e.target.value)}
             />
-          </form>
-          <div className="d-flex align-items-center">
             <select
-              className="form-select me-3" // Added spacing here
+              className="form-select"
+              style={{ maxWidth: "150px" }}
               value={filterStatus}
-              onChange={handleStatusChange}
+              onChange={(e) => setFilterStatus(e.target.value)}
             >
               <option value="">All Statuses</option>
               <option value="Completed">Completed</option>
@@ -143,23 +193,40 @@ function DashBoard() {
               <option value="In Progress">In Progress</option>
             </select>
             <select
-              className="form-select me-3" // Added spacing here
+              className="form-select"
+              style={{ maxWidth: "150px" }}
               value={filterPriority}
-              onChange={handlePriorityChange}
+              onChange={(e) => setFilterPriority(e.target.value)}
             >
               <option value="">All Priorities</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
+            <select
+              className="form-select"
+              style={{ maxWidth: "150px" }}
+              value={filterDueDate}
+              onChange={(e) => setFilterDueDate(e.target.value)}
+            >
+              <option value="">All Due Dates</option>
+              <option value="today">Due Today</option>
+              <option value="week">Due This Week</option>
+              <option value="overdue">Overdue</option>
+            </select>
+            <button
+              className={`btn ${darkMode ? "btn-light" : "btn-dark"} btn-sm`}
+              onClick={toggleDarkMode}
+              title="Toggle Dark Mode"
+            >
+              {darkMode ? "☀️" : "🌙"}
+            </button>
             {currentUser && (
-              <span className="me-3">
-                {" "}
-                {/* Added spacing here */}
+              <span className="me-2">
                 Hello, <strong>{currentUser.username}</strong>
               </span>
             )}
-            <button className="btn btn-danger" onClick={handleLogout}>
+            <button className="btn btn-danger btn-sm" onClick={handleLogout}>
               Logout
             </button>
           </div>
@@ -168,15 +235,21 @@ function DashBoard() {
 
       {/* Welcome Message */}
       <div className="container mt-4">
-        <div className="alert alert-success text-center">
+        <div
+          className={`alert ${
+            darkMode ? "alert-dark" : "alert-success"
+          } text-center`}
+        >
           Welcome to the Task Manager Dashboard!
         </div>
       </div>
 
-      {/* Body */}
+      {/* Task List */}
       <div className="container mt-4">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h2>Assigned Tasks</h2>
+        <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+          <h3 className="mb-3 mb-md-0">
+            Hello Team, here are your assigned tasks. Good luck!
+          </h3>
           <Link to="/create-task" className="btn btn-primary">
             Add Task
           </Link>
@@ -184,29 +257,37 @@ function DashBoard() {
         <div className="row">
           {filteredTasks.length > 0 ? (
             filteredTasks.map((task) => (
-              <div key={task.id || task._id} className="col-md-4 mb-4">
-                <div className="card">
+              <div key={task._id} className="col-12 col-sm-6 col-md-4 mb-4">
+                <div
+                  className={`card h-100 ${
+                    darkMode ? "bg-secondary text-light" : ""
+                  }`}
+                >
                   <div className="card-body">
                     <h5 className="card-title">{task.title}</h5>
                     <p className="card-text">{task.description}</p>
                     <p className="mb-1">
+                      <FaTasks className="me-2" />
                       <strong>Status:</strong> {task.status}
                     </p>
-                    <p className="mb-1">
+                    <p className={`mb-1 ${getPriorityColor(task.priority)}`}>
+                      <FaFlag className="me-2" />
                       <strong>Priority:</strong> {task.priority}
                     </p>
                     <p className="mb-1">
+                      <FaCalendarAlt className="me-2" />
                       <strong>Due Date:</strong>{" "}
                       {new Date(task.due_date).toLocaleDateString()}
                     </p>
                     <p className="mb-1">
+                      <FaUser className="me-2" />
                       <strong>Assigned To:</strong>{" "}
                       {task.assigned_to?.username || "Unassigned"}
                     </p>
                     <div className="d-flex justify-content-between mt-2">
                       <button
                         className="btn btn-secondary btn-sm"
-                        onClick={() => handleEditTask(task.id || task._id)}
+                        onClick={() => handleEditTask(task._id)}
                       >
                         Edit
                       </button>

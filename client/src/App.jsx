@@ -17,7 +17,6 @@ function App() {
         <Route path="edit-task/:id" element={<EditTask />} />
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/create-task" element={<CreateTask />} />
-       
       </Routes>
     </Router>
   );
