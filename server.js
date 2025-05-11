@@ -26,7 +26,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const clientBuildPath = path.join(__dirname, "./client/dist");
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(cookieParser());
 app.use(express.json());
 app.set("io", io);
