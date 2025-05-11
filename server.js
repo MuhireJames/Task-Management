@@ -26,7 +26,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const clientBuildPath = path.join(__dirname, "./client/dist");
 
 // Middleware
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.set("io", io);
@@ -35,19 +35,20 @@ app.set("io", io);
 app.use("/api/auth", authRouter);
 app.use("/api/tasks", taskRouter);
 
-app.use(express.static(path.resolve(__dirname, "./client/dist")));
+// Serve static files from the frontend build
+app.use(express.static(clientBuildPath));
 
+// Catch-all route to serve the frontend
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "./client/dist", "index.html"));
+  res.sendFile(path.resolve(clientBuildPath, "index.html"));
 });
-app.use("*", (res, req) => {
+
+// Handle 404 for undefined API routes
+app.use("*", (req, res) => {
   res.status(404).json({ msg: "Not found" });
 });
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(clientBuildPath, "index.html"));
-});
-
+// Socket.IO connection
 io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
 
@@ -56,6 +57,7 @@ io.on("connection", (socket) => {
   });
 });
 
+// Database connection and server start
 const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
 
