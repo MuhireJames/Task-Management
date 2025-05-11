@@ -15,6 +15,4 @@ router.use(authenticateToken);
 router.route("/").get(getAllTasks,getTaskByFilter).post(createTask);
 router.route("/:id").get(getTaskById).patch(updateTask).delete(deleteTask);
 
-// router.get("/", getTaskByFilter);
-
 export default router;

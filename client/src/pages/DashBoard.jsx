@@ -80,24 +80,26 @@ function DashBoard() {
     return dueDate < now && !isDueToday(date);
   };
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.title
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesStatus = filterStatus ? task.status === filterStatus : true;
-    const matchesPriority = filterPriority
-      ? task.priority === filterPriority
-      : true;
+  const filteredTasks = tasks
+    .filter((task) => {
+      const matchesSearch = task.title
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const matchesStatus = filterStatus ? task.status === filterStatus : true;
+      const matchesPriority = filterPriority
+        ? task.priority === filterPriority
+        : true;
 
-    let matchesDueDate = true;
-    if (filterDueDate === "today") matchesDueDate = isDueToday(task.due_date);
-    else if (filterDueDate === "week")
-      matchesDueDate = isDueThisWeek(task.due_date);
-    else if (filterDueDate === "overdue")
-      matchesDueDate = isOverdue(task.due_date);
+      let matchesDueDate = true;
+      if (filterDueDate === "today") matchesDueDate = isDueToday(task.due_date);
+      else if (filterDueDate === "week")
+        matchesDueDate = isDueThisWeek(task.due_date);
+      else if (filterDueDate === "overdue")
+        matchesDueDate = isOverdue(task.due_date);
 
-    return matchesSearch && matchesStatus && matchesPriority && matchesDueDate;
-  });
+      return matchesSearch && matchesStatus && matchesPriority && matchesDueDate;
+    })
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date)); // Sort tasks by due date in ascending order
 
   const handleLogout = async () => {
     try {

@@ -4,7 +4,7 @@ import {
   logout,
   verify,
   getAllUsers,
-  getCurrentUser,
+  getCurrentUser
 } from "../controller/authController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { Router } from "express";
